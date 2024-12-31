@@ -10,55 +10,110 @@
             max-width: 800px;
             margin: 20px auto;
             padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }
         textarea {
             width: 100%;
             min-height: 150px;
             margin: 10px 0;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-family: monospace;
+            resize: vertical;
+        }
+        .button-group {
+            display: flex;
+            gap: 10px;
+            margin: 10px 0;
         }
         button {
             padding: 10px 20px;
-            margin: 10px 0;
             background-color: #4CAF50;
             color: white;
             border: none;
             border-radius: 4px;
             cursor: pointer;
+            transition: background-color 0.3s;
         }
         button:hover {
             background-color: #45a049;
+        }
+        button.secondary {
+            background-color: #2196F3;
+        }
+        button.secondary:hover {
+            background-color: #1976D2;
+        }
+        button.clear {
+            background-color: #f44336;
+        }
+        button.clear:hover {
+            background-color: #d32f2f;
         }
         #testResult {
             margin-top: 10px;
             padding: 10px;
             border-radius: 4px;
+            transition: all 0.3s;
         }
         .success {
             background-color: #dff0d8;
             color: #3c763d;
+            border-left: 4px solid #3c763d;
         }
         .error {
             background-color: #f2dede;
             color: #a94442;
+            border-left: 4px solid #a94442;
+        }
+        .stats {
+            margin-top: 10px;
+            padding: 10px;
+            background-color: #e8eaf6;
+            border-radius: 4px;
+            font-size: 0.9em;
+        }
+        .copy-button {
+            background-color: #607d8b;
+            float: right;
+        }
+        .copy-button:hover {
+            background-color: #455a64;
         }
     </style>
 </head>
 <body>
-    <h1>Morphologischer Kasten</h1>
-    
-    <h2>Dimensionen und Optionen:</h2>
-    <textarea id="input" placeholder="Geben Sie die Dimensionen und Optionen ein, z.B.:
+    <div class="container">
+        <h1>Morphologischer Kasten</h1>
+        
+        <h2>Dimensionen und Optionen:</h2>
+        <textarea id="input" placeholder="Geben Sie die Dimensionen und Optionen ein, z.B.:
 Obst: Äpfel, Bananen, Kirschen
 Tortenboden: Weich, Hart
 Creme: ja, nein"></textarea>
-    
-    <button onclick="generatePermutations()">Generiere Permutationen</button>
-    <button onclick="runTest()">Test ausführen</button>
-    
-    <h2>Ergebnis:</h2>
-    <textarea id="output" readonly></textarea>
-    
-    <div id="testResult"></div>
+        
+        <div class="button-group">
+            <button onclick="generatePermutations()">Generiere Permutationen</button>
+            <button class="secondary" onclick="runTest()">Test ausführen</button>
+            <button class="clear" onclick="clearAll()">Alles löschen</button>
+        </div>
+        
+        <h2>Ergebnis:</h2>
+        <div style="position: relative;">
+            <textarea id="output" readonly></textarea>
+            <button class="copy-button" onclick="copyToClipboard()" style="position: absolute; top: 10px; right: 10px;">Kopieren</button>
+        </div>
+        
+        <div id="testResult"></div>
+        <div id="stats" class="stats"></div>
+    </div>
 
     <script>
         function parseInput(input) {
@@ -68,11 +123,13 @@ Creme: ja, nein"></textarea>
             for (const line of lines) {
                 const [dimension, optionsStr] = line.split(':');
                 if (optionsStr) {
-                    const options = optionsStr.split(',').map(opt => opt.trim());
-                    dimensions.push({
-                        name: dimension.trim(),
-                        options: options
-                    });
+                    const options = optionsStr.split(',').map(opt => opt.trim()).filter(opt => opt);
+                    if (options.length > 0) {
+                        dimensions.push({
+                            name: dimension.trim(),
+                            options: options
+                        });
+                    }
                 }
             }
             
@@ -96,12 +153,32 @@ Creme: ja, nein"></textarea>
             return `${index + 1}) ${perm.map(p => `${p.dimension}: ${p.value}`).join(', ')}`;
         }
 
+        function updateStats(dimensions, permutations) {
+            const stats = document.getElementById('stats');
+            const totalDimensions = dimensions.length;
+            const totalOptions = dimensions.reduce((sum, dim) => sum + dim.options.length, 0);
+            const totalPermutations = permutations.length;
+            
+            stats.innerHTML = `
+                <strong>Statistik:</strong><br>
+                Anzahl Dimensionen: ${totalDimensions}<br>
+                Gesamtanzahl Optionen: ${totalOptions}<br>
+                Anzahl Permutationen: ${totalPermutations}
+            `;
+        }
+
         function generatePermutations() {
             const input = document.getElementById('input').value;
+            if (!input.trim()) {
+                alert('Bitte geben Sie mindestens eine Dimension mit Optionen ein.');
+                return;
+            }
+
             const dimensions = parseInput(input);
             const permutations = generateAllPermutations(dimensions);
             const output = permutations.map((perm, index) => formatPermutation(perm, index)).join('\n');
             document.getElementById('output').value = output;
+            updateStats(dimensions, permutations);
             return output;
         }
 
@@ -113,18 +190,37 @@ Creme: ja, nein`;
             document.getElementById('input').value = testInput;
             const output = generatePermutations();
             
-            // Erwartete Anzahl der Permutationen: 3 * 2 * 2 = 12
-            const expectedCount = 12;
+            const expectedCount = 12; // 3 * 2 * 2
             const actualCount = output.split('\n').length;
             
             const testResult = document.getElementById('testResult');
             if (actualCount === expectedCount) {
                 testResult.className = 'success';
-                testResult.textContent = `Test erfolgreich! ${actualCount} Permutationen wurden generiert.`;
+                testResult.textContent = `✓ Test erfolgreich! ${actualCount} Permutationen wurden korrekt generiert.`;
             } else {
                 testResult.className = 'error';
-                testResult.textContent = `Test fehlgeschlagen! Erwartete ${expectedCount} Permutationen, aber ${actualCount} wurden generiert.`;
+                testResult.textContent = `✗ Test fehlgeschlagen! Erwartete ${expectedCount} Permutationen, aber ${actualCount} wurden generiert.`;
             }
+        }
+
+        function clearAll() {
+            document.getElementById('input').value = '';
+            document.getElementById('output').value = '';
+            document.getElementById('testResult').textContent = '';
+            document.getElementById('stats').textContent = '';
+        }
+
+        function copyToClipboard() {
+            const output = document.getElementById('output');
+            output.select();
+            document.execCommand('copy');
+            
+            const copyButton = document.querySelector('.copy-button');
+            const originalText = copyButton.textContent;
+            copyButton.textContent = 'Kopiert!';
+            setTimeout(() => {
+                copyButton.textContent = originalText;
+            }, 2000);
         }
     </script>
 </body>

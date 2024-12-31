@@ -3,6 +3,8 @@ Eine Implementation der Moderationsmethode "Morphologischer Kasten"
 
 - GitHub Pages: https://stho32.github.io/MorphologischerKasten/
 
+- https://youtu.be/NtDdjzlMd94?si=Fr_Gv_5bCrFSy3bP
+
 ## Beschreibung
 Diese Webanwendung implementiert die Moderationsmethode "Morphologischer Kasten". Sie ermöglicht es, aus verschiedenen Dimensionen und deren Optionen alle möglichen Kombinationen zu generieren.
 
