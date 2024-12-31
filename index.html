@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Morphologischer Kasten</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 20px auto;
+            padding: 20px;
+        }
+        textarea {
+            width: 100%;
+            min-height: 150px;
+            margin: 10px 0;
+        }
+        button {
+            padding: 10px 20px;
+            margin: 10px 0;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        #testResult {
+            margin-top: 10px;
+            padding: 10px;
+            border-radius: 4px;
+        }
+        .success {
+            background-color: #dff0d8;
+            color: #3c763d;
+        }
+        .error {
+            background-color: #f2dede;
+            color: #a94442;
+        }
+    </style>
+</head>
+<body>
+    <h1>Morphologischer Kasten</h1>
+    
+    <h2>Dimensionen und Optionen:</h2>
+    <textarea id="input" placeholder="Geben Sie die Dimensionen und Optionen ein, z.B.:
+Obst: Äpfel, Bananen, Kirschen
+Tortenboden: Weich, Hart
+Creme: ja, nein"></textarea>
+    
+    <button onclick="generatePermutations()">Generiere Permutationen</button>
+    <button onclick="runTest()">Test ausführen</button>
+    
+    <h2>Ergebnis:</h2>
+    <textarea id="output" readonly></textarea>
+    
+    <div id="testResult"></div>
+
+    <script>
+        function parseInput(input) {
+            const lines = input.trim().split('\n');
+            const dimensions = [];
+            
+            for (const line of lines) {
+                const [dimension, optionsStr] = line.split(':');
+                if (optionsStr) {
+                    const options = optionsStr.split(',').map(opt => opt.trim());
+                    dimensions.push({
+                        name: dimension.trim(),
+                        options: options
+                    });
+                }
+            }
+            
+            return dimensions;
+        }
+
+        function generateAllPermutations(dimensions) {
+            if (dimensions.length === 0) return [[]];
+            
+            const [first, ...rest] = dimensions;
+            const restPermutations = generateAllPermutations(rest);
+            
+            return first.options.flatMap(option => 
+                restPermutations.map(perm => 
+                    [{dimension: first.name, value: option}, ...perm]
+                )
+            );
+        }
+
+        function formatPermutation(perm, index) {
+            return `${index + 1}) ${perm.map(p => `${p.dimension}: ${p.value}`).join(', ')}`;
+        }
+
+        function generatePermutations() {
+            const input = document.getElementById('input').value;
+            const dimensions = parseInput(input);
+            const permutations = generateAllPermutations(dimensions);
+            const output = permutations.map((perm, index) => formatPermutation(perm, index)).join('\n');
+            document.getElementById('output').value = output;
+            return output;
+        }
+
+        function runTest() {
+            const testInput = `Obst: Äpfel, Bananen, Kirschen
+Tortenboden: Weich, Hart
+Creme: ja, nein`;
+            
+            document.getElementById('input').value = testInput;
+            const output = generatePermutations();
+            
+            // Erwartete Anzahl der Permutationen: 3 * 2 * 2 = 12
+            const expectedCount = 12;
+            const actualCount = output.split('\n').length;
+            
+            const testResult = document.getElementById('testResult');
+            if (actualCount === expectedCount) {
+                testResult.className = 'success';
+                testResult.textContent = `Test erfolgreich! ${actualCount} Permutationen wurden generiert.`;
+            } else {
+                testResult.className = 'error';
+                testResult.textContent = `Test fehlgeschlagen! Erwartete ${expectedCount} Permutationen, aber ${actualCount} wurden generiert.`;
+            }
+        }
+    </script>
+</body>
+</html>
