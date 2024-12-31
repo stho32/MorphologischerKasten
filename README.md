@@ -1,6 +1,8 @@
 # MorphologischerKasten
 Eine Implementation der Moderationsmethode "Morphologischer Kasten"
 
+- GitHub Pages: https://stho32.github.io/MorphologischerKasten/
+
 ## Beschreibung
 Diese Webanwendung implementiert die Moderationsmethode "Morphologischer Kasten". Sie ermöglicht es, aus verschiedenen Dimensionen und deren Optionen alle möglichen Kombinationen zu generieren.
 
